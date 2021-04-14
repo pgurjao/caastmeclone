@@ -26,34 +26,27 @@ public class QrCodeDTO {
 	private long qrCodeId;
 	
 	private String indexKey;
-//	private String urlToPost;
 	private String urlToRedirect;
 	private boolean deuBug;
 	
 	public QrCodeDTO() {
-		
-//		this.urlToPost = "http://localhost:8080/enviarurl";
-		this.urlToRedirect = null;
-		this.indexKey = gerarAes256Key();
-		
-		if (this.indexKey == null) {
-			this.deuBug = true;
-			System.out.println("[QrCodeDTO] indexKey == null");
-		} else {
-			this.deuBug = false;
-		}
-		gerarQrCode(indexKey);
 	}
 	
-	public static BufferedImage generateQRCodeImage(String barcodeText) throws Exception {
+	public BufferedImage generateQRCodeImage() throws Exception {
+		
+		String barcodeText = this.getIndexKey(); 
+		
+		if (barcodeText == null) {
+			return null;
+		}
 		
 		QRCodeWriter barcodeWriter = new QRCodeWriter();
-		BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 200, 200);
+		BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 400, 400);
 
 		return MatrixToImageWriter.toBufferedImage(bitMatrix);
 	}
-	
-	private String gerarAes256Key() {
+
+	public String gerarAes256Key() {
 		
 		KeyGenerator keyGen = null;
 		
@@ -65,38 +58,19 @@ public class QrCodeDTO {
 			return null;
 		} finally {
 			if (keyGen == null) {
+				this.deuBug = true;
 				return null;
 			} else {
 				keyGen.init(256); // for example
+				this.deuBug = false;
 			}
 		}
 		SecretKey secretKey = keyGen.generateKey();
-		
 		String encodedBase64Key = Base64.getEncoder().encodeToString(secretKey.getEncoded());
-		System.out.println("[qrCodeDTO]encodedBase64Key =" + encodedBase64Key);
-		
-		byte[] decodedBase64Key = Base64.getDecoder().decode(encodedBase64Key);
-		System.out.println("[qrCodeDTO]DEcodedBase64Key =" + decodedBase64Key);
+		System.out.println("[QrCodeDTO (encodedBase64Key)]: " + encodedBase64Key);
 		
 		return encodedBase64Key;
 	}
-	
-	private void gerarQrCode(String indexKey) {
-		
-		String barCodeText = indexKey;
-		System.out.println("[qrCodeDTO] barCodeText= " + barCodeText);
-		
-		try {
-			generateQRCodeImage(barCodeText);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("\n\n\n[qrCodeDTO] Exception na geracao do QR CODE");
-		}
-	}
-	
-//	private void salvarNaDb() {
-//		
-//	}
 
 	public long getQrCodeId() {
 		return qrCodeId;
@@ -113,14 +87,6 @@ public class QrCodeDTO {
 	public void setIndexKey(String indexKey) {
 		this.indexKey = indexKey;
 	}
-
-//	public String getUrlToPost() {
-//		return urlToPost;
-//	}
-
-//	public void setUrlToPost(String urlToPost) {
-//		this.urlToPost = urlToPost;
-//	}
 
 	public String getUrlToRedirect() {
 		return urlToRedirect;

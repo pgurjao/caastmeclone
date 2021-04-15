@@ -1,6 +1,5 @@
 package com.gurja.cmc.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,30 +15,48 @@ public class QrCodeService {
 	@Autowired
 	public QrCodeRepository qrCodeRepository;
 
-	public QrCodeDTO save(QrCodeDTO qrCode) {
+	public QrCodeDTO save(QrCodeDTO qrCodeDto) {
 
-		if (qrCode == null) {
+		if (qrCodeDto == null) {
 			System.out.println("[QrCodeService] qrCode == null");
 			return null;
 		}
-		return qrCodeRepository.save(qrCode);
+		return qrCodeRepository.save(qrCodeDto);
 	}
 	
 	public QrCodeDTO getByIndexKey (String indexKey) {
-		
-		List<QrCodeDTO> listQrCode = new ArrayList<QrCodeDTO>();
-		
-		listQrCode = this.getAll();
-		
-//		System.out.println("[QrCodeService (indexKey)]: " + indexKey);
-		
-		for (QrCodeDTO qDto : listQrCode) {
-			if (qDto.getIndexKey().equalsIgnoreCase(indexKey) ) {
-				return qDto;
-			}
-		}
-		return null;
+
+		QrCodeDTO qrCodeDto = new QrCodeDTO();
+//
+//		listQrCode = this.getAll();
+//
+//		//		System.out.println("[QrCodeService (indexKey)]: " + indexKey);
+//
+//		for (QrCodeDTO qDto : listQrCode) {
+//			if (qDto.getIndexKey().equalsIgnoreCase(indexKey) ) {
+//				return qDto;
+//			}
+//		}
+		qrCodeDto = qrCodeRepository.findByIndexKey(indexKey);
+		return qrCodeDto;
 	}
+	
+	
+//	public QrCodeDTO getByIndexKey (String indexKey) {
+//		
+//		List<QrCodeDTO> listQrCode = new ArrayList<QrCodeDTO>();
+//		
+//		listQrCode = this.getAll();
+//		
+////		System.out.println("[QrCodeService (indexKey)]: " + indexKey);
+//		
+//		for (QrCodeDTO qDto : listQrCode) {
+//			if (qDto.getIndexKey().equalsIgnoreCase(indexKey) ) {
+//				return qDto;
+//			}
+//		}
+//		return null;
+//	}
 	
 	public Optional<QrCodeDTO> getById(Long id) {
 		return qrCodeRepository.findById(id);
@@ -47,5 +64,13 @@ public class QrCodeService {
 	
 	public List<QrCodeDTO> getAll() {
 		return (List<QrCodeDTO>) qrCodeRepository.findAll();
+	}
+
+	public void deleteById(long qrCodeId) {		
+		qrCodeRepository.deleteById(qrCodeId);		
+	}
+	
+	public void deleteByStatus(String toDelete) {
+		qrCodeRepository.deleteByStatus(toDelete);
 	}
 }

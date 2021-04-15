@@ -11,16 +11,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+//import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+//import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gurja.cmc.dto.QrCodeDTO;
 import com.gurja.cmc.service.QrCodeService;
-
 
 @RestController
 @RequestMapping
@@ -32,49 +31,58 @@ public class QrCodeController {
 	@GetMapping("/geraraeskey")
 	public ResponseEntity<String> gerarQrCode() {
 		
-		QrCodeDTO qrCode = new QrCodeDTO();
-		qrCode.setIndexKey(qrCode.gerarAes256Key() );
-		if (qrCode.isDeuBug() == true) {
-			System.out.println("[QrCodeController] qrCode.isDeuBug == true");
+		QrCodeDTO qrCodeDTO = new QrCodeDTO();
+		qrCodeDTO.setIndexKey(qrCodeDTO.gerarAes256Key() );
+		if (qrCodeDTO.getStatus() == QrCodeDTOStatus.ERROR.toString() ) {
+			System.out.println("[QrCodeController] qrCodeDTO.status == ERROR");
 			return new ResponseEntity<>("HTTP ERROR 500\n\nerror generating AES Key", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		qrCodeService.save(qrCode);
-		return new ResponseEntity<>(qrCode.getIndexKey(), HttpStatus.OK);
+		qrCodeService.save(qrCodeDTO);
+		return new ResponseEntity<>(qrCodeDTO.getIndexKey(), HttpStatus.OK);
 	}
 	
 	@GetMapping(value = "/gerarQrCodeImage", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<BufferedImage> gerarQrCodeImage() throws Exception {
 		
-		QrCodeDTO qrCode = new QrCodeDTO();
-		qrCode.setIndexKey(qrCode.gerarAes256Key() );
-		if (qrCode.isDeuBug() == true) {
-			System.out.println("[QrCodeController] qrCode.isDeuBug == true");
+		QrCodeDTO qrCodeDTO = new QrCodeDTO();
+		qrCodeDTO.setIndexKey(qrCodeDTO.gerarAes256Key() );
+		if (qrCodeDTO.getStatus() == QrCodeDTOStatus.ERROR.toString() ) {
+			System.out.println("[QrCodeController] qrCodeDTO.status == ERROR");
 			return badResponse(null);
 		}
-		qrCodeService.save(qrCode);
-		return okResponse(qrCode.generateQRCodeImage() );
+		qrCodeService.save(qrCodeDTO);
+		return okResponse(qrCodeDTO.generateQRCodeImage() );
 	}
 	
 	@RequestMapping(value="/redirectUrl",method = RequestMethod.POST) 
 //	@PostMapping("/redirectUrl")
-	public ResponseEntity<String> redirectUrl(@RequestBody Map<String,Object> body ) {
+	public ResponseEntity<String> redirectUrl(@RequestBody Map<String,Object> body ) throws InterruptedException {
 		
-		QrCodeDTO qDTO = new QrCodeDTO ();
+		QrCodeDTO qrCodeDTO = new QrCodeDTO ();
 		
-		qDTO = qrCodeService.getByIndexKey(body.get("indexKey").toString() );
+		qrCodeDTO = qrCodeService.getByIndexKey(body.get("indexKey").toString() );
 		
-		if (qDTO == null) {
-			return new ResponseEntity<>("Chave nao encontrada", HttpStatus.BAD_REQUEST);
+		if (qrCodeDTO == null) {
+//			return ResponseEntity.noContent().build();
+			return new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
 		}
-		
+		qrCodeDTO.setStatus(QrCodeDTOStatus.WAITING_URLTOREDIRECT.toString());
+		//DEBUG
 //		System.out.println("indexKey= " + body.get("indexKey").toString() );
 //		System.out.println("urlToRedirect= " + body.get("urlToRedirect").toString() );
 		
-		qDTO.setUrlToRedirect(body.get("urlToRedirect").toString() );
 		
-		qrCodeService.save(qDTO);
+		qrCodeDTO.setUrlToRedirect(body.get("urlToRedirect").toString() );
+//		System.out.println("[QrCodeController (qDTO.Id)]: " + qDTO.getQrCodeId());
+//		System.out.println("[QrCodeController (qDTO.Key)]: " + qDTO.getIndexKey());
+//		System.out.println("[QrCodeController (qDTO.redirect)]: " + qDTO.getUrlToRedirect());
+		
+		qrCodeService.save(qrCodeDTO);
+//		qrCodeService.deleteById(qrCodeDTO.getQrCodeId() );
 		
 //		return new ResponseEntity<>(Long.toString(qDTO.getQrCodeId() ), HttpStatus.OK); RETORNA ID DA TABELA PARA USUARIO
+		
+		qrCodeDTO.setStatus(QrCodeDTOStatus.TO_DELETE.toString());
 		return new ResponseEntity<>("'indexKey' found, 'urlToRedirect' updated successfully!", HttpStatus.OK);
 	}
 	
@@ -89,5 +97,9 @@ public class QrCodeController {
 	
 	private ResponseEntity<BufferedImage> badResponse(BufferedImage image) {
         return new ResponseEntity<>(image, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	
+	public void cleanOldRecordsFromDataBase() {
+		qrCodeService.deleteByStatus(QrCodeDTOStatus.TO_DELETE.toString() );
 	}
 }

@@ -17,6 +17,8 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 
+import com.gurja.cmc.controller.QrCodeDTOStatus;
+
 @Entity
 @Table(name="QRCODE")
 public class QrCodeDTO {
@@ -27,11 +29,40 @@ public class QrCodeDTO {
 	
 	private String indexKey;
 	private String urlToRedirect;
-	private boolean deuBug;
+//	private boolean deuBug;
+	private String status;
 	
 	public QrCodeDTO() {
+		this.status = QrCodeDTOStatus.OBJ_CREATED.toString();
 	}
 	
+	public String gerarAes256Key() {
+			
+			KeyGenerator keyGen = null;
+			
+			try {
+				keyGen = KeyGenerator.getInstance("AES");
+			} catch (NoSuchAlgorithmException e) {
+	//			e.printStackTrace();
+				System.out.println("\n\n\n[qrCodeDTO] Exception 'NoSuchAlgorithmException' na geracao da chave AES");
+				this.setStatus(QrCodeDTOStatus.ERROR.toString() );
+				return null;
+			} finally {
+				if (keyGen == null) {
+					this.status = QrCodeDTOStatus.ERROR.toString();
+					return null;
+				} else {
+					keyGen.init(256); // for example
+				}
+			}
+			SecretKey secretKey = keyGen.generateKey();
+			String encodedBase64Key = Base64.getEncoder().encodeToString(secretKey.getEncoded());
+			System.out.println("[QrCodeDTO (encodedBase64Key)]: " + encodedBase64Key);
+			this.status = QrCodeDTOStatus.KEY_CREATED.toString();
+			
+			return encodedBase64Key;
+		}
+
 	public BufferedImage generateQRCodeImage() throws Exception {
 		
 		String barcodeText = this.getIndexKey(); 
@@ -42,34 +73,10 @@ public class QrCodeDTO {
 		
 		QRCodeWriter barcodeWriter = new QRCodeWriter();
 		BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 400, 400);
+		
+		this.status = QrCodeDTOStatus.IMAGE_CREATED.toString();
 
 		return MatrixToImageWriter.toBufferedImage(bitMatrix);
-	}
-
-	public String gerarAes256Key() {
-		
-		KeyGenerator keyGen = null;
-		
-		try {
-			keyGen = KeyGenerator.getInstance("AES");
-		} catch (NoSuchAlgorithmException e) {
-//			e.printStackTrace();
-			System.out.println("\n\n\n[qrCodeDTO] Exception 'NoSuchAlgorithmException' na geracao da chave AES");
-			return null;
-		} finally {
-			if (keyGen == null) {
-				this.deuBug = true;
-				return null;
-			} else {
-				keyGen.init(256); // for example
-				this.deuBug = false;
-			}
-		}
-		SecretKey secretKey = keyGen.generateKey();
-		String encodedBase64Key = Base64.getEncoder().encodeToString(secretKey.getEncoded());
-		System.out.println("[QrCodeDTO (encodedBase64Key)]: " + encodedBase64Key);
-		
-		return encodedBase64Key;
 	}
 
 	public long getQrCodeId() {
@@ -95,8 +102,16 @@ public class QrCodeDTO {
 	public void setUrlToRedirect(String urlToRedirect) {
 		this.urlToRedirect = urlToRedirect;
 	}
-
-	public boolean isDeuBug() {
-		return deuBug;
+	
+	public String getStatus() {
+		return status;
 	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+//	public boolean isDeuBug() {
+//		return deuBug;
+//	}
 }

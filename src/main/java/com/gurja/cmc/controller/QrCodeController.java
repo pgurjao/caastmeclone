@@ -86,6 +86,10 @@ public class QrCodeController {
 		return new ResponseEntity<>("'indexKey' found, 'urlToRedirect' updated successfully!", HttpStatus.OK);
 	}
 	
+	public void cleanOldRecordsFromDataBase() {
+		qrCodeService.deleteByStatus(QrCodeDTOStatus.TO_DELETE.toString() );
+	}
+
 	@Bean
 	public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
 	    return new BufferedImageHttpMessageConverter();
@@ -97,9 +101,5 @@ public class QrCodeController {
 	
 	private ResponseEntity<BufferedImage> badResponse(BufferedImage image) {
         return new ResponseEntity<>(image, HttpStatus.INTERNAL_SERVER_ERROR);
-	}
-	
-	public void cleanOldRecordsFromDataBase() {
-		qrCodeService.deleteByStatus(QrCodeDTOStatus.TO_DELETE.toString() );
 	}
 }

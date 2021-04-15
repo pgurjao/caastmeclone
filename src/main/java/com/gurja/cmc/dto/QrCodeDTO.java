@@ -29,7 +29,6 @@ public class QrCodeDTO {
 	
 	private String indexKey;
 	private String urlToRedirect;
-//	private boolean deuBug;
 	private String status;
 	
 	public QrCodeDTO() {
@@ -110,8 +109,4 @@ public class QrCodeDTO {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-
-//	public boolean isDeuBug() {
-//		return deuBug;
-//	}
 }

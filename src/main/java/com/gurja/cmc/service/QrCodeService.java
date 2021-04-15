@@ -27,36 +27,9 @@ public class QrCodeService {
 	public QrCodeDTO getByIndexKey (String indexKey) {
 
 		QrCodeDTO qrCodeDto = new QrCodeDTO();
-//
-//		listQrCode = this.getAll();
-//
-//		//		System.out.println("[QrCodeService (indexKey)]: " + indexKey);
-//
-//		for (QrCodeDTO qDto : listQrCode) {
-//			if (qDto.getIndexKey().equalsIgnoreCase(indexKey) ) {
-//				return qDto;
-//			}
-//		}
 		qrCodeDto = qrCodeRepository.findByIndexKey(indexKey);
 		return qrCodeDto;
 	}
-	
-	
-//	public QrCodeDTO getByIndexKey (String indexKey) {
-//		
-//		List<QrCodeDTO> listQrCode = new ArrayList<QrCodeDTO>();
-//		
-//		listQrCode = this.getAll();
-//		
-////		System.out.println("[QrCodeService (indexKey)]: " + indexKey);
-//		
-//		for (QrCodeDTO qDto : listQrCode) {
-//			if (qDto.getIndexKey().equalsIgnoreCase(indexKey) ) {
-//				return qDto;
-//			}
-//		}
-//		return null;
-//	}
 	
 	public Optional<QrCodeDTO> getById(Long id) {
 		return qrCodeRepository.findById(id);

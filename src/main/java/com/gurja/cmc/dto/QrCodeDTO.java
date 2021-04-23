@@ -17,7 +17,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 
-import com.gurja.cmc.controller.QrCodeDTOStatus;
+import com.gurja.cmc.controller.QrStatus;
 
 @Entity
 @Table(name="QRCODE")
@@ -32,7 +32,7 @@ public class QrCodeDTO {
 	private String status;
 	
 	public QrCodeDTO() {
-		this.status = QrCodeDTOStatus.OBJ_CREATED.toString();
+		this.status = QrStatus.OBJ_CREATED.toString();
 	}
 	
 	public String gerarAes256Key() {
@@ -44,11 +44,11 @@ public class QrCodeDTO {
 			} catch (NoSuchAlgorithmException e) {
 	//			e.printStackTrace();
 				System.out.println("\n\n\n[qrCodeDTO] Exception 'NoSuchAlgorithmException' na geracao da chave AES");
-				this.setStatus(QrCodeDTOStatus.ERROR.toString() );
+				this.setStatus(QrStatus.ERROR.toString() );
 				return null;
 			} finally {
 				if (keyGen == null) {
-					this.status = QrCodeDTOStatus.ERROR.toString();
+					this.status = QrStatus.ERROR.toString();
 					return null;
 				} else {
 					keyGen.init(256); // for example
@@ -57,7 +57,7 @@ public class QrCodeDTO {
 			SecretKey secretKey = keyGen.generateKey();
 			String encodedBase64Key = Base64.getEncoder().encodeToString(secretKey.getEncoded());
 			System.out.println("[QrCodeDTO (encodedBase64Key)]: " + encodedBase64Key);
-			this.status = QrCodeDTOStatus.KEY_CREATED.toString();
+			this.status = QrStatus.KEY_CREATED.toString();
 			
 			return encodedBase64Key;
 		}
@@ -73,7 +73,7 @@ public class QrCodeDTO {
 		QRCodeWriter barcodeWriter = new QRCodeWriter();
 		BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 400, 400);
 		
-		this.status = QrCodeDTOStatus.IMAGE_CREATED.toString();
+		this.status = QrStatus.IMAGE_CREATED.toString();
 
 		return MatrixToImageWriter.toBufferedImage(bitMatrix);
 	}
@@ -109,4 +109,12 @@ public class QrCodeDTO {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+
+	@Override
+	public String toString() {
+		return "QrCodeDTO [qrCodeId=" + qrCodeId + ", indexKey=" + indexKey + ", urlToRedirect=" + urlToRedirect
+				+ ", status=" + status + "]";
+	}
+	
+	
 }

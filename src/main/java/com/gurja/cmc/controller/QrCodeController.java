@@ -33,7 +33,7 @@ public class QrCodeController {
 		
 		QrCodeDTO qrCodeDTO = new QrCodeDTO();
 		qrCodeDTO.setIndexKey(qrCodeDTO.gerarAes256Key() );
-		if (qrCodeDTO.getStatus() == QrCodeDTOStatus.ERROR.toString() ) {
+		if (qrCodeDTO.getStatus() == QrStatus.ERROR.toString() ) {
 			System.out.println("[QrCodeController] qrCodeDTO.status == ERROR");
 			return new ResponseEntity<>("HTTP ERROR 500\n\nerror generating AES Key", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -46,7 +46,7 @@ public class QrCodeController {
 		
 		QrCodeDTO qrCodeDTO = new QrCodeDTO();
 		qrCodeDTO.setIndexKey(qrCodeDTO.gerarAes256Key() );
-		if (qrCodeDTO.getStatus() == QrCodeDTOStatus.ERROR.toString() ) {
+		if (qrCodeDTO.getStatus() == QrStatus.ERROR.toString() ) {
 			System.out.println("[QrCodeController] qrCodeDTO.status == ERROR");
 			return badResponse(null);
 		}
@@ -56,9 +56,22 @@ public class QrCodeController {
 	
 	@RequestMapping(value="/redirectUrl",method = RequestMethod.POST) 
 //	@PostMapping("/redirectUrl")
-	public ResponseEntity<String> redirectUrl(@RequestBody Map<String,Object> body ) throws InterruptedException {
+	public ResponseEntity<String> redirectUrl(@RequestBody Map<String,String> body ) throws InterruptedException {
 		
 		QrCodeDTO qrCodeDTO = new QrCodeDTO ();
+		
+		if ( body.isEmpty() || body.size() == 0 ) {
+//			System.out.println("[QrCodeController (body.isEmpty())] body.isEmpty() or size = 0");
+			return new ResponseEntity<>("", HttpStatus.NOT_ACCEPTABLE);
+		}
+		if ( !body.containsKey("indexKey") || body.get("indexKey") == null ) {
+//			System.out.println("[QrCodeController (indexKey)] body does not contain indexKey it OR is null");
+			return new ResponseEntity<>("", HttpStatus.NOT_ACCEPTABLE);
+		}
+		if ( !body.containsKey("urlToRedirect") || body.get("urlToRedirect") == null ) {
+//			System.out.println("[QrCodeController (urlToRedirect)] body does not contain urlToRedirect OR is null");
+			return new ResponseEntity<>("", HttpStatus.NOT_ACCEPTABLE);
+		}
 		
 		qrCodeDTO = qrCodeService.getByIndexKey(body.get("indexKey").toString() );
 		
@@ -66,28 +79,43 @@ public class QrCodeController {
 //			return ResponseEntity.noContent().build();
 			return new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
 		}
-		qrCodeDTO.setStatus(QrCodeDTOStatus.WAITING_URLTOREDIRECT.toString());
+		if (qrCodeDTO.getStatus().equalsIgnoreCase(QrStatus.TO_DELETE.toString() ) ) {
+			return new ResponseEntity<>("", HttpStatus.GONE);
+		}
+		
+		qrCodeDTO.setStatus(QrStatus.WAITING_URLTOREDIRECT.toString() );
+		
 		//DEBUG
 //		System.out.println("indexKey= " + body.get("indexKey").toString() );
 //		System.out.println("urlToRedirect= " + body.get("urlToRedirect").toString() );
 		
+		String urlToValidate = body.get("urlToRedirect").toString();
 		
-		qrCodeDTO.setUrlToRedirect(body.get("urlToRedirect").toString() );
+		// ADICIONAR LOGICA DE VALIDACAO DE URL
+		// if (isUrlValid(urlToValidate) == true) {
+		
+		qrCodeDTO.setUrlToRedirect(urlToValidate);
+		qrCodeDTO.setStatus(QrStatus.TO_DELETE.toString());
+		qrCodeService.save(qrCodeDTO);
+
+		// } else {
+		// System.out.println("Invalid URL");
+		// }
+		
 //		System.out.println("[QrCodeController (qDTO.Id)]: " + qDTO.getQrCodeId());
 //		System.out.println("[QrCodeController (qDTO.Key)]: " + qDTO.getIndexKey());
 //		System.out.println("[QrCodeController (qDTO.redirect)]: " + qDTO.getUrlToRedirect());
 		
-		qrCodeService.save(qrCodeDTO);
 //		qrCodeService.deleteById(qrCodeDTO.getQrCodeId() );
 		
 //		return new ResponseEntity<>(Long.toString(qDTO.getQrCodeId() ), HttpStatus.OK); RETORNA ID DA TABELA PARA USUARIO
+//		return new ResponseEntity<>(qrCodeDTO.toString(), HttpStatus.OK);
 		
-		qrCodeDTO.setStatus(QrCodeDTOStatus.TO_DELETE.toString());
-		return new ResponseEntity<>("'indexKey' found, 'urlToRedirect' updated successfully!", HttpStatus.OK);
+		return new ResponseEntity<>("URL pushed successfully!", HttpStatus.OK);
 	}
 	
 	public void cleanOldRecordsFromDataBase() {
-		qrCodeService.deleteByStatus(QrCodeDTOStatus.TO_DELETE.toString() );
+		qrCodeService.deleteByStatus(QrStatus.TO_DELETE.toString() );
 	}
 
 	@Bean

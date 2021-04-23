@@ -4,6 +4,14 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Added by PJ ###
+.mvn/
+mvnw*
+src/
+src/main/java/com/gurja/cmc/repository/QrCodeToDbRepository.java
+src/main/java/com/gurja/cmc/dto/QrCodeToDb.java
+
+
 ### STS ###
 .apt_generated
 .classpath
